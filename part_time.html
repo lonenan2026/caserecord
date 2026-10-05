@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教育心理學機構 - PT 輔導與薪資管理系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for clean administrative UI */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-full bg-slate-900 text-slate-100 flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800 border-b border-slate-700 shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg shadow">
+                    <i class="fa-solid fa-brain-circuit text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg text-slate-100 tracking-tight">EduPsyche HR Portal</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">兼職輔導員服務時數與薪資管理系統</p>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 sm:space-x-2">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-indigo-600 text-white shadow">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> 儀表板
+                </button>
+                <button onclick="switchTab('logs')" id="nav-logs" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-clipboard-list mr-1.5"></i> 服務明細
+                </button>
+                <button onclick="switchTab('payroll')" id="nav-payroll" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> 薪資總表
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto">
+
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <div id="tab-dashboard" class="space-y-6">
+            <!-- Top Action Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold text-white">機構營運概覽</h2>
+                    <p class="text-sm text-slate-400">快速掌握本月兼職輔導員的服務成效與財務支出</p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <!-- Month Selector for Dashboard -->
+                    <select id="dash-month-filter" onchange="updateDashboard()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full sm:w-auto">
+                        <!-- Populated by JS -->
+                    </select>
+                    <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow hover:shadow-indigo-500/20 flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-plus"></i> 新增記錄
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">本月總服務時數</p>
+                        <h3 id="kpi-total-hours" class="text-2xl font-bold text-white mt-1">0.0 <span class="text-sm font-normal text-slate-400">小時</span></h3>
+                    </div>
+                    <div class="bg-indigo-500/10 text-indigo-400 p-3 rounded-lg text-xl">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">本月預估薪資支出</p>
+                        <h3 id="kpi-total-salary" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</h3>
+                    </div>
+                    <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg text-xl">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">活躍輔導員人數</p>
+                        <h3 id="kpi-active-staff" class="text-2xl font-bold text-white mt-1">0 <span class="text-sm font-normal text-slate-400">位</span></h3>
+                    </div>
+                    <div class="bg-blue-500/10 text-blue-400 p-3 rounded-lg text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">總記錄筆數</p>
+                        <h3 id="kpi-total-logs" class="text-2xl font-bold text-white mt-1">0 <span class="text-sm font-normal text-slate-400">筆</span></h3>
+                    </div>
+                    <div class="bg-amber-500/10 text-amber-400 p-3 rounded-lg text-xl">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Quick Breakdown -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Recent Logs Preview -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-white text-base">最近輔導記錄</h3>
+                        <button onclick="switchTab('logs')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">查看全部 &rarr;</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                                <tr>
+                                    <th class="py-3 px-3">日期</th>
+                                    <th class="py-3 px-3">輔導員</th>
+                                    <th class="py-3 px-3">學生代號</th>
+                                    <th class="py-3 px-3">類別</th>
+                                    <th class="py-3 px-3 text-right">時數</th>
+                                    <th class="py-3 px-3 text-right">工資</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-recent-table-body" class="divide-y divide-slate-700/50">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Help / Stats Card -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="bg-indigo-500/20 p-3 rounded-xl text-indigo-400">
+                                <i class="fa-solid fa-circle-info text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">HR 管理提示</h4>
+                                <p class="text-xs text-slate-400">系統即時運作狀態</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                <span>所有輸入資料自動儲存於瀏覽器 LocalStorage，無需擔心重新整理遺失。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                <span>月結時可至「薪資總表」一鍵匯出 CSV 檔交給財務部過數。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                                <span>學生代號請使用匿名代號（如 ST-101），確保個資符合機構隱私規範。</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-700 flex gap-2">
+                        <button onclick="exportCSV()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 font-medium">
+                            <i class="fa-solid fa-download"></i> 匯出報表
+                        </button>
+                        <button onclick="resetDemoData()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs py-2 px-3 rounded-lg transition-colors font-medium">
+                            重置示範數據
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: SERVICE LOGS ================= -->
+        <div id="tab-logs" class="space-y-6 hidden">
+            <!-- Action & Filter Bar -->
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <div class="w-full sm:w-auto">
+                        <label class="block text-xs text-slate-400 mb-1">搜尋同事姓名</label>
+                        <input type="text" id="filter-name" placeholder="輸入同事姓名..." oninput="renderLogsTable()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full sm:w-48 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div class="w-full sm:w-auto">
+                        <label class="block text-xs text-slate-400 mb-1">篩選月份</label>
+                        <select id="filter-month" onchange="renderLogsTable()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full sm:w-40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="">全部月份</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
+                    <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow hover:shadow-indigo-500/20 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 新增輔導記錄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Logs Table Card -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                    <h3 class="font-bold text-white text-base">輔導服務記錄明細</h3>
+                    <span id="logs-count-badge" class="bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded-full font-medium">共 0 筆</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="py-3 px-4">記錄編號</th>
+                                <th class="py-3 px-4">日期</th>
+                                <th class="py-3 px-4">同事姓名</th>
+                                <th class="py-3 px-4">職級</th>
+                                <th class="py-3 px-4">學生代號</th>
+                                <th class="py-3 px-4">類別</th>
+                                <th class="py-3 px-4">時間</th>
+                                <th class="py-3 px-4 text-right">時數</th>
+                                <th class="py-3 px-4 text-right">時薪</th>
+                                <th class="py-3 px-4 text-right">當次工資</th>
+                                <th class="py-3 px-4 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body" class="divide-y divide-slate-700/50">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: MONTHLY PAYROLL ================= -->
+        <div id="tab-payroll" class="space-y-6 hidden">
+            <!-- Payroll Header -->
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">每月薪資結算總表</h2>
+                    <p class="text-sm text-slate-400">自動彙整各同事每月總服務時數與總工資，方便財務部門出糧</p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">結算月份</label>
+                        <select id="payroll-month-select" onchange="renderPayrollTable()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full sm:w-44 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <button onclick="exportCSV()" class="mt-5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-file-csv"></i> 匯出財務報表
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payroll Summary Table -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                    <h3 class="font-bold text-white text-base">月結薪資彙整表</h3>
+                    <span id="payroll-total-display" class="text-sm font-semibold text-emerald-400">總薪資支出: $0.00</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="py-3 px-4">月份</th>
+                                <th class="py-3 px-4">同事姓名</th>
+                                <th class="py-3 px-4">職級</th>
+                                <th class="py-3 px-4 text-right">總服務時數</th>
+                                <th class="py-3 px-4 text-right">總薪資 (HKD)</th>
+                                <th class="py-3 px-4 text-center">出糧狀態</th>
+                                <th class="py-3 px-4 text-center">操作 / 備註</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payroll-table-body" class="divide-y divide-slate-700/50">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Add/Edit Record Modal -->
+    <div id="record-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+                <h3 id="modal-title" class="font-bold text-white text-lg">新增輔導服務記錄</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="record-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="record-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">輔導日期 <span class="text-rose-400">*</span></label>
+                        <input type="date" id="form-date" required class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">輔導類別 <span class="text-rose-400">*</span></label>
+                        <select id="form-category" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="個別心理輔導">個別心理輔導</option>
+                            <option value="SEN 學習支援">SEN 學習支援</option>
+                            <option value="家長諮詢輔導">家長諮詢輔導</option>
+                            <option value="評估與測驗">評估與測驗</option>
+                            <option value="小組治療">小組治療</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">同事姓名 <span class="text-rose-400">*</span></label>
+                        <input type="text" id="form-staff" required placeholder="例如：張心怡 心理師" onblur="autoFillRate()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">職級 <span class="text-rose-400">*</span></label>
+                        <select id="form-role" onchange="autoFillRate()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="實習輔導員 (Intern)">實習輔導員 (Intern)</option>
+                            <option value="註冊輔導員 (Counsellor)" selected>註冊輔導員 (Counsellor)</option>
+                            <option value="資深教育心理學家 (EP)">資深教育心理學家 (EP)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">學生代號（保障私隱） <span class="text-rose-400">*</span></label>
+                        <input type="text" id="form-student" required placeholder="例如：ST-2026-08" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">時薪 (HKD) <span class="text-rose-400">*</span></label>
+                        <input type="number" id="form-rate" required min="0" step="10" value="350" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">開始時間 <span class="text-rose-400">*</span></label>
+                        <input type="time" id="form-start-time" required value="14:00" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">結束時間 <span class="text-rose-400">*</span></label>
+                        <input type="time" id="form-end-time" required value="15:30" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">備註說明</label>
+                    <textarea id="form-notes" rows="2" placeholder="例如：面談過程順利，已給予家長建議..." class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-slate-700 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2 rounded-lg text-sm transition-colors shadow">
+                        儲存記錄
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <div id="toast-icon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+        <div id="toast-message" class="text-sm font-medium">操作成功！</div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Initial Demo Data
+        const defaultLogs = [
+            {
+                id: "LOG-2026-001",
+                date: "2026-10-02",
+                staff: "張心怡 心理師",
+                role: "註冊輔導員 (Counsellor)",
+                student: "ST-2026-01",
+                category: "個別心理輔導",
+                startTime: "10:00",
+                endTime: "11:30",
+                hours: 1.5,
+                rate: 350,
+                salary: 525,
+                notes: "情緒調節輔導"
+            },
+            {
+                id: "LOG-2026-002",
+                date: "2026-10-04",
+                staff: "陳偉傑 博士",
+                role: "資深教育心理學家 (EP)",
+                student: "ST-2026-05",
+                category: "評估與測驗",
+                startTime: "13:30",
+                endTime: "16:30",
+                hours: 3.0,
+                rate: 650,
+                salary: 1950,
+                notes: "ADHD 評估面談"
+            },
+            {
+                id: "LOG-2026-003",
+                date: "2026-10-05",
+                staff: "林曉彤",
+                role: "實習輔導員 (Intern)",
+                student: "ST-2026-09",
+                category: "SEN 學習支援",
+                startTime: "15:00",
+                endTime: "16:30",
+                hours: 1.5,
+                rate: 200,
+                salary: 300,
+                notes: "讀寫障礙支援練習"
+            }
+        ];
+
+        // Payroll Status Storage (Key: "YYYY-MM_StaffName")
+        let payrollStatuses = JSON.parse(localStorage.getItem('edu_payroll_statuses')) || {};
+
+        // Load or Initialize Logs
+        let logs = JSON.parse(localStorage.getItem('edu_counseling_logs'));
+        if (!logs || logs.length === 0) {
+            logs = defaultLogs;
+            localStorage.setItem('edu_counseling_logs', JSON.stringify(logs));
+        }
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            initMonthSelectors();
+            updateDashboard();
+            renderLogsTable();
+            renderPayrollTable();
+            
+            // Set default date to today for modal
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+        };
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            ['dashboard', 'logs', 'payroll'].forEach(id => {
+                document.getElementById(`tab-${id}`).classList.add('hidden');
+                document.getElementById(`nav-${id}`).className = "px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).className = "px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-indigo-600 text-white shadow";
+
+            if (tabId === 'dashboard') updateDashboard();
+            if (tabId === 'logs') renderLogsTable();
+            if (tabId === 'payroll') renderPayrollTable();
+        }
+
+        // Initialize Month Selectors
+        function initMonthSelectors() {
+            const monthsSet = new Set();
+            logs.forEach(l => {
+                if (l.date) monthsSet.add(l.date.substring(0, 7));
+            });
+            
+            // Ensure current month is present
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            monthsSet.add(currentMonth);
+
+            const sortedMonths = Array.from(monthsSet).sort().reverse();
+
+            const dashSelect = document.getElementById('dash-month-filter');
+            const filterMonthSelect = document.getElementById('filter-month');
+            const payrollSelect = document.getElementById('payroll-month-select');
+
+            let optionsHtml = `<option value="">全部月份 (All)</option>`;
+            sortedMonths.forEach(m => {
+                optionsHtml += `<option value="${m}">${m}</option>`;
+            });
+
+            let dashOptionsHtml = ``;
+            sortedMonths.forEach(m => {
+                dashOptionsHtml += `<option value="${m}">${m} 月份</option>`;
+            });
+
+            dashSelect.innerHTML = dashOptionsHtml;
+            dashSelect.value = currentMonth;
+            if(!dashSelect.value) dashSelect.selectedIndex = 0;
+
+            filterMonthSelect.innerHTML = optionsHtml;
+            payrollSelect.innerHTML = dashOptionsHtml;
+            payrollSelect.value = currentMonth;
+            if(!payrollSelect.value) payrollSelect.selectedIndex = 0;
+        }
+
+        // Update Dashboard Stats
+        function updateDashboard() {
+            const selectedMonth = document.getElementById('dash-month-filter').value;
+            
+            const filteredLogs = logs.filter(l => {
+                if (!selectedMonth) return true;
+                return l.date.startsWith(selectedMonth);
+            });
+
+            let totalHours = 0;
+            let totalSalary = 0;
+            const staffSet = new Set();
+
+            filteredLogs.forEach(l => {
+                totalHours += Number(l.hours || 0);
+                totalSalary += Number(l.salary || 0);
+                staffSet.add(l.staff);
+            });
+
+            document.getElementById('kpi-total-hours').innerHTML = `${totalHours.toFixed(1)} <span class="text-sm font-normal text-slate-400">小時</span>`;
+            document.getElementById('kpi-total-salary').innerText = `$${totalSalary.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpi-active-staff').innerHTML = `${staffSet.size} <span class="text-sm font-normal text-slate-400">位</span>`;
+            document.getElementById('kpi-total-logs').innerHTML = `${filteredLogs.length} <span class="text-sm font-normal text-slate-400">筆</span>`;
+
+            // Render Recent Table (Top 5)
+            const recentBody = document.getElementById('dash-recent-table-body');
+            const sortedRecent = [...filteredLogs].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            if (sortedRecent.length === 0) {
+                recentBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">此月份尚無輔導記錄</td></tr>`;
+                return;
+            }
+
+            recentBody.innerHTML = sortedRecent.map(l => `
+                <tr class="hover:bg-slate-700/30 transition-colors">
+                    <td class="py-3 px-3 font-medium text-slate-200">${l.date}</td>
+                    <td class="py-3 px-3">${l.staff}</td>
+                    <td class="py-3 px-3 text-indigo-400 font-mono">${l.student}</td>
+                    <td class="py-3 px-3"><span class="bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded">${l.category}</span></td>
+                    <td class="py-3 px-3 text-right font-mono">${l.hours}h</td>
+                    <td class="py-3 px-3 text-right font-mono text-emerald-400">$${l.salary.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Logs Table
+        function renderLogsTable() {
+            const nameQuery = document.getElementById('filter-name').value.toLowerCase();
+            const monthQuery = document.getElementById('filter-month').value;
+            const tbody = document.getElementById('logs-table-body');
+
+            const filtered = logs.filter(l => {
+                const matchName = l.staff.toLowerCase().includes(nameQuery) || l.student.toLowerCase().includes(nameQuery);
+                const matchMonth = monthQuery ? l.date.startsWith(monthQuery) : true;
+                return matchName && matchMonth;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById('logs-count-badge').innerText = `共 ${filtered.length} 筆`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-500">沒有找到符合條件的輔導記錄</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(l => `
+                <tr class="hover:bg-slate-700/30 transition-colors">
+                    <td class="py-3 px-4 font-mono text-xs text-slate-400">${l.id}</td>
+                    <td class="py-3 px-4 font-medium text-slate-200">${l.date}</td>
+                    <td class="py-3 px-4 font-semibold text-white">${l.staff}</td>
+                    <td class="py-3 px-4"><span class="text-xs text-slate-400">${l.role}</span></td>
+                    <td class="py-3 px-4 font-mono text-indigo-400">${l.student}</td>
+                    <td class="py-3 px-4"><span class="bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded-md">${l.category}</span></td>
+                    <td class="py-3 px-4 font-mono text-xs text-slate-400">${l.startTime} - ${l.endTime}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-200">${l.hours} 小時</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-400">$${l.rate}</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold text-emerald-400">$${l.salary.toLocaleString()}</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="editRecord('${l.id}')" class="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors" title="編輯">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteRecord('${l.id}')" class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors" title="刪除">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Monthly Payroll Summary Table
+        function renderPayrollTable() {
+            const selectedMonth = document.getElementById('payroll-month-select').value;
+            const tbody = document.getElementById('payroll-table-body');
+            const totalDisplay = document.getElementById('payroll-total-display');
+
+            const filteredLogs = logs.filter(l => l.date.startsWith(selectedMonth));
+
+            // Group by staff member
+            const staffMap = {};
+            filteredLogs.forEach(l => {
+                if (!staffMap[l.staff]) {
+                    staffMap[l.staff] = {
+                        staff: l.staff,
+                        role: l.role,
+                        totalHours: 0,
+                        totalSalary: 0,
+                        count: 0
+                    };
+                }
+                staffMap[l.staff].totalHours += Number(l.hours || 0);
+                staffMap[l.staff].totalSalary += Number(l.salary || 0);
+                staffMap[l.staff].count += 1;
+            });
+
+            const payrollList = Object.values(staffMap);
+            let grandTotal = 0;
+
+            if (payrollList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">${selectedMonth} 月份尚無輔導記錄</td></tr>`;
+                totalDisplay.innerText = `總薪資支出: $0.00`;
+                return;
+            }
+
+            tbody.innerHTML = payrollList.map(item => {
+                grandTotal += item.totalSalary;
+                const statusKey = `${selectedMonth}_${item.staff}`;
+                const status = payrollStatuses[statusKey] || '未處理';
+                const statusBadgeClass = status === '已過數' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+
+                return `
+                    <tr class="hover:bg-slate-700/30 transition-colors">
+                        <td class="py-3 px-4 font-mono text-slate-400">${selectedMonth}</td>
+                        <td class="py-3 px-4 font-bold text-white">${item.staff}</td>
+                        <td class="py-3 px-4 text-slate-400 text-xs">${item.role}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-200">${item.totalHours.toFixed(1)} 小時</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-emerald-400">$${item.totalSalary.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="togglePayrollStatus('${selectedMonth}', '${item.staff}')" class="px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass} transition-all">
+                                ${status} <i class="fa-solid fa-rotate ml-1 text-[10px]"></i>
+                            </button>
+                        </td>
+                        <td class="py-3 px-4 text-center text-xs text-slate-400">
+                            已完成 ${item.count} 節輔導
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            totalDisplay.innerText = `總薪資支出: $${grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Toggle Payroll Status
+        function togglePayrollStatus(month, staffName) {
+            const key = `${month}_${staffName}`;
+            const current = payrollStatuses[key] || '未處理';
+            payrollStatuses[key] = current === '未處理' ? '已過數' : '未處理';
+            localStorage.setItem('edu_payroll_statuses', JSON.stringify(payrollStatuses));
+            renderPayrollTable();
+            showToast(`已更新 ${staffName} 的出糧狀態為「${payrollStatuses[key]}」`);
+        }
+
+        // Modal Controls
+        function openAddModal() {
+            document.getElementById('modal-title').innerText = "新增輔導服務記錄";
+            document.getElementById('record-form').reset();
+            document.getElementById('record-id').value = "";
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('form-rate').value = 350;
+            document.getElementById('record-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('record-modal').classList.add('hidden');
+        }
+
+        // Auto-fill Hourly Rate based on Role
+        function autoFillRate() {
+            const role = document.getElementById('form-role').value;
+            const rateInput = document.getElementById('form-rate');
+            if (role.includes('Intern')) rateInput.value = 200;
+            else if (role.includes('Counsellor')) rateInput.value = 350;
+            else if (role.includes('EP')) rateInput.value = 650;
+        }
+
+        // Edit Record
+        function editRecord(id) {
+            const record = logs.find(l => l.id === id);
+            if (!record) return;
+
+            document.getElementById('modal-title').innerText = "編輯輔導服務記錄";
+            document.getElementById('record-id').value = record.id;
+            document.getElementById('form-date').value = record.date;
+            document.getElementById('form-staff').value = record.staff;
+            document.getElementById('form-role').value = record.role;
+            document.getElementById('form-student').value = record.student;
+            document.getElementById('form-category').value = record.category;
+            document.getElementById('form-start-time').value = record.startTime;
+            document.getElementById('form-end-time').value = record.endTime;
+            document.getElementById('form-rate').value = record.rate;
+            document.getElementById('form-notes').value = record.notes || '';
+
+            document.getElementById('record-modal').classList.remove('hidden');
+        }
+
+        // Handle Form Submit
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const idField = document.getElementById('record-id').value;
+            const date = document.getElementById('form-date').value;
+            const staff = document.getElementById('form-staff').value;
+            const role = document.getElementById('form-role').value;
+            const student = document.getElementById('form-student').value;
+            const category = document.getElementById('form-category').value;
+            const startTime = document.getElementById('form-start-time').value;
+            const endTime = document.getElementById('form-end-time').value;
+            const rate = parseFloat(document.getElementById('form-rate').value);
+            const notes = document.getElementById('form-notes').value;
+
+            // Calculate hours from start and end time
+            const [startH, startM] = startTime.split(':').map(Number);
+            const [endH, endM] = endTime.split(':').map(Number);
+            let hours = (endH + endM / 60) - (startH + startM / 60);
+            if (hours <= 0) hours = 1.0; // fallback safety
+            hours = Math.round(hours * 100) / 100;
+
+            const salary = hours * rate;
+
+            if (idField) {
+                // Update existing
+                const index = logs.findIndex(l => l.id === idField);
+                if (index !== -1) {
+                    logs[index] = {
+                        ...logs[index],
+                        date, staff, role, student, category, startTime, endTime, hours, rate, salary, notes
+                    };
+                }
+                showToast("記錄已成功更新！");
+            } else {
+                // Create new
+                const newId = `LOG-${date.replaceAll('-','')}-${Math.floor(100 + Math.random() * 900)}`;
+                const newRecord = {
+                    id: newId,
+                    date, staff, role, student, category, startTime, endTime, hours, rate, salary, notes
+                };
+                logs.push(newRecord);
+                showToast("新輔導記錄已成功新增！");
+            }
+
+            localStorage.setItem('edu_counseling_logs', JSON.stringify(logs));
+            closeModal();
+            initMonthSelectors();
+            updateDashboard();
+            renderLogsTable();
+            renderPayrollTable();
+        }
+
+        // Delete Record
+        function deleteRecord(id) {
+            if (confirm("確定要刪除這筆輔導記錄嗎？刪除後無法復原。")) {
+                logs = logs.filter(l => l.id !== id);
+                localStorage.setItem('edu_counseling_logs', JSON.stringify(logs));
+                initMonthSelectors();
+                updateDashboard();
+                renderLogsTable();
+                renderPayrollTable();
+                showToast("記錄已刪除", "rose");
+            }
+        }
+
+        // Export CSV Function
+        function exportCSV() {
+            if (logs.length === 0) {
+                showToast("目前沒有可匯出的數據！", "rose");
+                return;
+            }
+
+            let csvContent = "\uFEFF記錄編號,輔導日期,同事姓名,職級,學生代號,輔導類別,開始時間,結束時間,時數,時薪(HKD),當次工資(HKD),備註\n";
+            logs.forEach(l => {
+                csvContent += `"${l.id}","${l.date}","${l.staff}","${l.role}","${l.student}","${l.category}","${l.startTime}","${l.endTime}",${l.hours},${l.rate},${l.salary},"${l.notes || ''}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `EduPsyche_Counseling_Payroll_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast("財會 CSV 報表已成功匯出！");
+        }
+
+        // Reset Demo Data
+        function resetDemoData() {
+            if (confirm("是否重置為系統預設的示範數據？現有的修改將被覆蓋。")) {
+                logs = defaultLogs;
+                payrollStatuses = {};
+                localStorage.setItem('edu_counseling_logs', JSON.stringify(logs));
+                localStorage.removeItem('edu_payroll_statuses');
+                initMonthSelectors();
+                updateDashboard();
+                renderLogsTable();
+                renderPayrollTable();
+                showToast("已重置為示範數據");
+            }
+        }
+
+        // Toast Notification Helper
+        function showToast(message, type = "emerald") {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+            if (type === "rose") {
+                iconEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-400"></i>`;
+            } else {
+                iconEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
